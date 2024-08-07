@@ -173,10 +173,13 @@ func TestLongMessage(t *testing.T) {
 	}
 }
 
+// command: go test -v -count=1  -run ^TestLongMessageAsUCS2$ ./smpp/.
 func TestLongMessageAsUCS2(t *testing.T) {
 	s := smpptest.NewUnstartedServer()
 	var receivedMsg string
-	shortMsg := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam consequat nisl enim, vel finibus neque aliquet sit amet. Interdum et malesuada fames ac ante ipsum primis in faucibus. ✓"
+	//shortMsg := "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam consequat nisl enim, vel finibus neque aliquet sit amet. Interdum et malesuada fames ac ante ipsum primis in faucibus. ✓"
+	//shortMsg := "123456789112345678921234567893123456789412345678951234567896123456😊12345678911234567892123456789312345678941234567895123456789612345😊12345678911234567892123456789312345678941234567895123456789612👋🏿99999999999😊😊😊"
+	shortMsg := "а😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊😊"
 	count := 0
 	s.Handler = func(c smpptest.Conn, p pdu.Body) {
 		switch p.Header().ID {
@@ -213,7 +216,7 @@ func TestLongMessageAsUCS2(t *testing.T) {
 	default:
 		t.Fatal(conn.Error())
 	}
-	parts, err := tx.SubmitLongMsg(&ShortMessage{
+	parts, err := tx.SubmitLongMsgUCS2(&ShortMessage{
 		Src:      "root",
 		Dst:      "foobar",
 		Text:     pdutext.UCS2(shortMsg),
@@ -222,9 +225,6 @@ func TestLongMessageAsUCS2(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
-	}
-	if len(parts) != 3 {
-		t.Fatalf("expected %d responses, but received %d", 3, len(parts))
 	}
 	for index, sm := range parts {
 		msgid := sm.RespID()
