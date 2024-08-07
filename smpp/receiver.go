@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mdouchement/smpp/smpp/pdu"
-	"github.com/mdouchement/smpp/smpp/pdu/pdufield"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu/pdufield"
 )
 
 // Receiver implements an SMPP client receiver.

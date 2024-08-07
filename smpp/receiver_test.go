@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mdouchement/smpp/smpp/pdu"
-	"github.com/mdouchement/smpp/smpp/smpptest"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/smpptest"
 )
 
 func TestReceiver(t *testing.T) {

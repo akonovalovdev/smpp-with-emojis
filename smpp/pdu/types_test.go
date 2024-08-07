@@ -10,8 +10,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/mdouchement/smpp/smpp/pdu/pdufield"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu/pdufield"
 )
 
 func TestBind(t *testing.T) {

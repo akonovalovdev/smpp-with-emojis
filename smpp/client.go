@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mdouchement/smpp/smpp/pdu"
-	"github.com/mdouchement/smpp/smpp/pdu/pdufield"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu/pdufield"
 )
 
 // ConnStatus is an abstract interface for a connection status change.

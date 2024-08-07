@@ -10,7 +10,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/mdouchement/smpp/smpp/pdu"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu"
 )
 
 // Conn implements a server side connection.

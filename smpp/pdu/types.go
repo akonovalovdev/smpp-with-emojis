@@ -5,8 +5,8 @@
 package pdu
 
 import (
-	"github.com/mdouchement/smpp/smpp/pdu/pdufield"
-	"github.com/mdouchement/smpp/smpp/pdu/pdutlv"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu/pdufield"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu/pdutlv"
 )
 
 // PDU Types.

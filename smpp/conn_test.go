@@ -7,9 +7,9 @@ package smpp
 import (
 	"testing"
 
-	"github.com/mdouchement/smpp/smpp/pdu"
-	"github.com/mdouchement/smpp/smpp/pdu/pdufield"
-	"github.com/mdouchement/smpp/smpp/smpptest"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu/pdufield"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/smpptest"
 )
 
 func TestConn(t *testing.T) {

@@ -13,7 +13,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/mdouchement/smpp/smpp/pdu"
+	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu"
 )
 
 var (
