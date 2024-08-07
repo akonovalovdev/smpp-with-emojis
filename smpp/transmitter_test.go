@@ -226,6 +226,7 @@ func TestLongMessageAsUCS2(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Log("Количество частей смс: ", len(parts))
 	for index, sm := range parts {
 		msgid := sm.RespID()
 		if msgid == "" {
