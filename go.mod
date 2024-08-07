@@ -1,4 +1,4 @@
-module github.com/mdouchement/smpp
+module github.com/akonovalovdev/smpp-with-emojis
 
 go 1.18
 
