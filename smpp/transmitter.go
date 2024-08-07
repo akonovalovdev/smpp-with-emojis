@@ -14,6 +14,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode/utf16"
+
+	"github.com/rivo/uniseg"
 
 	"github.com/mdouchement/smpp/smpp/pdu"
 	"github.com/mdouchement/smpp/smpp/pdu/pdufield"
@@ -445,6 +448,110 @@ func (t *Transmitter) submitMsg(sm *ShortMessage, p pdu.Body, dataCoding uint8) 
 		return sm, s
 	}
 	return sm, resp.Err
+}
+
+// SubmitLongMsgUCS2 sends a long message with emojis (more than 140 bytes)
+// and returns and updates the given sm with the response status.
+// It returns the same sm object.
+func (t *Transmitter) SubmitLongMsgUCS2(sm *ShortMessage) ([]ShortMessage, error) {
+	maxLen := 132 // to avoid a character being split between payloads
+
+	encodedText := sm.Text.Encode()
+
+	// Getting the initial string to split it into graphemes
+	u16 := make([]uint16, 0, len(encodedText)/2)
+	for i := range u16 {
+		u16 = append(u16, binary.BigEndian.Uint16(encodedText[i*2:i*2+2]))
+	}
+
+	decodedStr := string(utf16.Decode(u16))
+
+	graphemes := uniseg.NewGraphemes(decodedStr)
+	encodedParts := [][]byte{}
+	currentPart := []byte{}
+	currentPartLen := 0
+
+	// Splitting a string into parts by grapheme valleys, taking into account the maximum length of one part
+	for graphemes.Next() {
+		cluster := graphemes.Str()
+		encodedCluster := pdutext.UCS2(cluster).Encode()
+
+		if currentPartLen+len(encodedCluster) > maxLen {
+			encodedParts = append(encodedParts, currentPart)
+			currentPart = encodedCluster
+			currentPartLen = len(encodedCluster)
+		} else {
+			currentPart = append(currentPart, encodedCluster...)
+			currentPartLen += len(encodedCluster)
+		}
+	}
+
+	if len(currentPart) > 0 {
+		encodedParts = append(encodedParts, currentPart)
+	}
+
+	countParts := len(encodedParts)
+
+	parts := make([]ShortMessage, 0, countParts)
+
+	t.rMutex.Lock()
+	rn := uint16(t.r.Intn(0xFFFF))
+	t.rMutex.Unlock()
+	UDHHeader := make([]byte, 7)
+	UDHHeader[0] = 0x06              // length of user data header
+	UDHHeader[1] = 0x08              // information element identifier, CSMS 16 bit reference number
+	UDHHeader[2] = 0x04              // length of remaining header
+	UDHHeader[3] = uint8(rn >> 8)    // most significant byte of the reference number
+	UDHHeader[4] = uint8(rn)         // least significant byte of the reference number
+	UDHHeader[5] = uint8(countParts) // total number of message parts
+	for i, part := range encodedParts {
+		UDHHeader[6] = uint8(i + 1) // current message part
+		p := pdu.NewSubmitSM(sm.TLVFields)
+		f := p.Fields()
+		f.Set(pdufield.SourceAddr, sm.Src)
+		f.Set(pdufield.DestinationAddr, sm.Dst)
+
+		fullPart := append(UDHHeader, part...)
+
+		f.Set(pdufield.ShortMessage, pdutext.Raw(fullPart))
+		f.Set(pdufield.RegisteredDelivery, uint8(sm.Register))
+		if sm.Validity != time.Duration(0) {
+			f.Set(pdufield.ValidityPeriod, convertValidity(sm.Validity))
+		}
+		f.Set(pdufield.ServiceType, sm.ServiceType)
+		f.Set(pdufield.SourceAddrTON, sm.SourceAddrTON)
+		f.Set(pdufield.SourceAddrNPI, sm.SourceAddrNPI)
+		f.Set(pdufield.DestAddrTON, sm.DestAddrTON)
+		f.Set(pdufield.DestAddrNPI, sm.DestAddrNPI)
+		f.Set(pdufield.ESMClass, 0x40)
+		f.Set(pdufield.ProtocolID, sm.ProtocolID)
+		f.Set(pdufield.PriorityFlag, sm.PriorityFlag)
+		f.Set(pdufield.ScheduleDeliveryTime, sm.ScheduleDeliveryTime)
+		f.Set(pdufield.ReplaceIfPresentFlag, sm.ReplaceIfPresentFlag)
+		f.Set(pdufield.SMDefaultMsgID, sm.SMDefaultMsgID)
+		f.Set(pdufield.DataCoding, uint8(sm.Text.Type()))
+		resp, err := t.do(p)
+		if err != nil {
+			return nil, err
+		}
+		sm.resp.Lock()
+		sm.resp.p = resp.PDU
+		sm.resp.Unlock()
+		if resp.PDU == nil {
+			return parts, fmt.Errorf("unexpected empty PDU")
+		}
+		if id := resp.PDU.Header().ID; id != pdu.SubmitSMRespID {
+			return parts, fmt.Errorf("unexpected PDU ID: %s", id)
+		}
+		if s := resp.PDU.Header().Status; s != 0 {
+			return parts, s
+		}
+		if resp.Err != nil {
+			return parts, resp.Err
+		}
+		parts = append(parts, *sm)
+	}
+	return parts, nil
 }
 
 func (t *Transmitter) submitMsgMulti(sm *ShortMessage, p pdu.Body, dataCoding uint8) (*ShortMessage, error) {
