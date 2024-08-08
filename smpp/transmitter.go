@@ -9,7 +9,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -458,8 +457,6 @@ func (t *Transmitter) SubmitLongMsgUCS2(sm *ShortMessage) ([]ShortMessage, error
 	maxLen := 132 // to avoid a character being split between payloads
 
 	encodedText := sm.Text.Encode()
-	log.Println("полученная строка до енкодинга выглядит так:", sm.Text)
-	log.Println("\nполучили строку", string(encodedText), "тип кодировки", sm.Text.Type())
 
 	// Getting the initial string to split it into graphemes
 	u16 := make([]uint16, 0, len(encodedText)/2)
@@ -468,7 +465,6 @@ func (t *Transmitter) SubmitLongMsgUCS2(sm *ShortMessage) ([]ShortMessage, error
 	}
 
 	decodedStr := string(utf16.Decode(u16))
-	log.Println("\nдекодировали строку в изначальный формат", decodedStr)
 
 	graphemes := uniseg.NewGraphemes(decodedStr)
 	encodedParts := [][]byte{}
@@ -480,7 +476,6 @@ func (t *Transmitter) SubmitLongMsgUCS2(sm *ShortMessage) ([]ShortMessage, error
 		cluster := graphemes.Str()
 		encodedCluster := pdutext.UCS2(cluster).Encode()
 
-		log.Println("Cluster:", cluster, "Encoded:", encodedCluster, "Length:", len(encodedCluster), "number of parts:", len(encodedParts)+1, "len of current part:", currentPartLen, "maxLen:", maxLen)
 		if currentPartLen+len(encodedCluster) > maxLen {
 			encodedParts = append(encodedParts, currentPart)
 			currentPart = encodedCluster
@@ -517,8 +512,6 @@ func (t *Transmitter) SubmitLongMsgUCS2(sm *ShortMessage) ([]ShortMessage, error
 		f.Set(pdufield.DestinationAddr, sm.Dst)
 
 		fullPart := append(UDHHeader, part...)
-
-		log.Printf("Part %d: %v", i+1, fullPart)
 
 		f.Set(pdufield.ShortMessage, pdutext.Raw(fullPart))
 		f.Set(pdufield.RegisteredDelivery, uint8(sm.Register))
