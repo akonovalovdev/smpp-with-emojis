@@ -459,9 +459,9 @@ func (t *Transmitter) SubmitLongMsgUCS2(sm *ShortMessage) ([]ShortMessage, error
 	encodedText := sm.Text.Encode()
 
 	// Getting the initial string to split it into graphemes
-	u16 := make([]uint16, 0, len(encodedText)/2)
+	u16 := make([]uint16, len(encodedText)/2)
 	for i := range u16 {
-		u16 = append(u16, binary.BigEndian.Uint16(encodedText[i*2:i*2+2]))
+		u16[i] = binary.BigEndian.Uint16(sm.Text.Encode()[i*2 : i*2+2])
 	}
 
 	decodedStr := string(utf16.Decode(u16))
