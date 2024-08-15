@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -301,6 +302,7 @@ func (t *Transmitter) do(p pdu.Body) (*tx, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Println("отправка завершена, получаем ответ")
 	select {
 	case resp := <-rc:
 		if resp.Err != nil {
@@ -340,7 +342,7 @@ func (t *Transmitter) SubmitLongMsg(sm *ShortMessage) ([]ShortMessage, error) {
 		maxLen = 132 // to avoid an escape character being split between payloads
 		break
 	case pdutext.UCS2:
-		maxLen = 132 // to avoid a character being split between payloads
+		maxLen = 134 // correct len to avoid a character being split between payloads
 		break
 	}
 	rawMsg := sm.Text.Encode()

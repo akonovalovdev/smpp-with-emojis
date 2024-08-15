@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 )
 
 // List is a list of PDU fields.
@@ -19,6 +20,7 @@ type List []Name
 // we attempt to decode text automatically. See pdutext package
 // for more information.
 func (l List) Decode(r *bytes.Buffer) (Map, error) {
+	log.Println("работает метод Decode из pdufield/list.go")
 	var (
 		unsuccessCount, numDest, udhLength, smLength int
 
@@ -42,6 +44,7 @@ loop:
 			SystemID,
 			SystemType,
 			ValidityPeriod:
+			log.Println(1)
 			b, err := r.ReadBytes(0x00)
 			if err == io.EOF {
 				break loop
@@ -68,6 +71,7 @@ loop:
 			SourceAddrNPI,
 			SourceAddrTON,
 			SMLength:
+			log.Println(2)
 			b, err := r.ReadByte()
 			if err == io.EOF {
 				break loop
@@ -88,6 +92,7 @@ loop:
 				udhiFlag = mask == b&mask
 			}
 		case UDHLength:
+			log.Println(3)
 			if !udhiFlag {
 				continue
 			}
@@ -101,6 +106,7 @@ loop:
 			udhLength = int(b)
 			f[k] = &Fixed{Data: b}
 		case GSMUserData:
+			log.Println(4)
 			if !udhiFlag {
 				continue
 			}
@@ -137,6 +143,7 @@ loop:
 			}
 			f[k] = &UDHList{Data: udhList}
 		case DestinationList:
+			log.Println(5)
 			var destList []DestSme
 			for i := 0; i < numDest; i++ {
 				var dest DestSme
@@ -180,6 +187,7 @@ loop:
 			}
 			f[k] = &DestSmeList{Data: destList}
 		case UnsuccessSme:
+			log.Println(6)
 			var unsList []UnSme
 			for i := 0; i < unsuccessCount; i++ {
 				var uns UnSme
@@ -217,7 +225,9 @@ loop:
 			}
 			f[k] = &UnSmeList{Data: unsList}
 		case ShortMessage:
+			log.Println(7, ShortMessage, "само сообщение", r.String())
 			// Check UDHLength
+			fmt.Println("smLength:", smLength, "udhLength:", udhLength)
 			if udhLength > 0 {
 				if smLength-udhLength-1 < 0 {
 					return nil, fmt.Errorf("smLength is lesser than udhLength+1: have %d and %d",
@@ -232,6 +242,7 @@ loop:
 					smLength, r.Len())
 			}
 			f[ShortMessage] = &SM{Data: r.Next(smLength)}
+			fmt.Printf("ShortMessage: %v\n", f[ShortMessage])
 		}
 	}
 	return f, nil

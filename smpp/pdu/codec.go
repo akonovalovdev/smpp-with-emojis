@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"sync/atomic"
 
 	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu/pdufield"
@@ -84,6 +85,7 @@ func (pdu *codec) SerializeTo(w io.Writer) error {
 			pdu.f.Set(k, nil)
 			f = pdu.f[k]
 		}
+		log.Println("поле:", k, "установили значение:", f)
 		if err := f.SerializeTo(&b); err != nil {
 			return err
 		}
@@ -94,6 +96,8 @@ func (pdu *codec) SerializeTo(w io.Writer) error {
 		}
 	}
 	pdu.h.Len = uint32(pdu.Len())
+	// напечатаем часть строки которая дошла сюда
+	log.Println("Длина всех байт:", pdu.h.Len)
 	err := pdu.h.SerializeTo(w)
 	if err != nil {
 		return err
@@ -141,6 +145,7 @@ func Decode(r io.Reader) (Body, error) {
 	case AlertNotificationID:
 		// TODO(fiorix): Implement AlertNotification.
 	case BindReceiverID, BindTransceiverID, BindTransmitterID:
+		log.Println("кейс bind:", hdr.ID, hdr.Len, b)
 		return decodeFields(newBind(hdr), b)
 	case BindReceiverRespID, BindTransceiverRespID, BindTransmitterRespID:
 		return decodeFields(newBindResp(hdr), b)
@@ -153,6 +158,7 @@ func Decode(r io.Reader) (Body, error) {
 	case DataSMRespID:
 		// TODO(fiorix): Implement DataSMResp.
 	case DeliverSMID:
+		log.Println("кейс deliver:", hdr.ID, hdr.Len, b)
 		return decodeFields(newDeliverSM(hdr), b)
 	case DeliverSMRespID:
 		return decodeFields(newDeliverSMResp(hdr), b)
@@ -165,6 +171,7 @@ func Decode(r io.Reader) (Body, error) {
 	case OutbindID:
 		// TODO(fiorix): Implement Outbind.
 	case QuerySMID:
+
 		return decodeFields(newQuerySM(hdr), b)
 	case QuerySMRespID:
 		return decodeFields(newQuerySMResp(hdr), b)
@@ -173,10 +180,12 @@ func Decode(r io.Reader) (Body, error) {
 	case ReplaceSMRespID:
 		// TODO(fiorix): Implement ReplaceSMResp.
 	case SubmitMultiID:
+		log.Println("кейс submitMulti:", hdr.ID, hdr.Len, b)
 		return decodeFields(newSubmitMulti(hdr), b)
 	case SubmitMultiRespID:
 		return decodeFields(newSubmitMultiResp(hdr), b)
 	case SubmitSMID:
+		log.Println("кейс submit:", hdr.ID, hdr.Len, b)
 		return decodeFields(newSubmitSM(hdr), b)
 	case SubmitSMRespID:
 		return decodeFields(newSubmitSMResp(hdr), b)

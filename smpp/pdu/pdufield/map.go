@@ -6,6 +6,7 @@ package pdufield
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu/pdutext"
 )
@@ -40,6 +41,7 @@ func (m Map) Set(k Name, v interface{}) error {
 		c := v.(pdutext.Codec)
 		m[k] = New(k, c.Encode())
 		if k == ShortMessage {
+			log.Println("ShortMessage: тут устанавливаем SMLength")
 			m[DataCoding] = &Fixed{Data: uint8(c.Type())}
 		}
 	default:
@@ -47,6 +49,7 @@ func (m Map) Set(k Name, v interface{}) error {
 	}
 	if k == ShortMessage {
 		m[SMLength] = &Fixed{Data: uint8(m[k].Len())}
+		log.Println("Длина составленного сообщения:", m[SMLength])
 	}
 	return nil
 }

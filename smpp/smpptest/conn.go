@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"log"
 	"net"
 
 	"github.com/akonovalovdev/smpp-with-emojis/smpp/pdu"
@@ -61,6 +62,7 @@ func (c *conn) Write(p pdu.Body) error {
 	if err != nil {
 		return err
 	}
+	log.Println("тут происходит запись в соединение")
 	return c.w.Flush()
 }
 
